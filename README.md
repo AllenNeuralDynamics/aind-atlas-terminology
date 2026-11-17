@@ -21,39 +21,52 @@ pip install .
 
 A terminology is the tree of structures an atlas's annotation volumes label, in the
 [atlas-assets](https://atlas-assets.readthedocs.io) format Allen publishes to the public
-`allen-atlas-assets` bucket. The 2017 Allen adult mouse terminology, which labels the CCFv3 2017
-annotation, ships with the package; other releases download once into `~/.cache`.
+`allen-atlas-assets` bucket. The package has no dependencies. The 2017 Allen adult mouse
+terminology, which labels the CCFv3 2017 annotation, ships with it; other releases
+(`KNOWN_RELEASES`) download once into `~/.cache`.
 
 ```python
-from aind_atlas_terminology import Terminology, slicer_color_table
+from aind_atlas_terminology import load, lateral, slicer_color_table
 
-ccf = Terminology.bundled()  # allen-adult-mouse-terminology 2017
-ccf2026 = Terminology.fetch("allen-adult-mouse-terminology", "2026")
+ccf = load()  # allen-adult-mouse-terminology 2017, bundled
+ccf26 = load("2026")  # fetched and cached
 
-# A user may name a structure by abbreviation, full name, identifier or annotation value
-ccf.term("LGd")                                    # Term(identifier='MBA:170', ...)
+# A structure is named by abbreviation, full name or identifier
+ccf.term("LGd")  # Term(identifier='MBA:170', ...)
 ccf.term("dorsal part of the lateral geniculate complex")
-ccf.resolve("CUL4 5").matched_on                   # 'alias': the IBL spelling of 'CUL4, 5'
-ccf.term("LGd-c")                                  # LookupError: ... did you mean LGd-co (...)?
-ccf.search("geniculate")                           # substring search, exact abbreviations first
+ccf.resolve("CUL4 5").matched_on  # 'alias': the IBL spelling of 'CUL4, 5'
+ccf.term("LGd-c")  # StructureNotFoundError: ... did you mean LGd-co (...)?
+ccf26.term("LH")  # AmbiguousStructureError: MBA:186 (Lateral habenula), MBA:1968 (Left hemisphere)
+ccf.terms_for(["LGd", "TH", "CA1"])  # reports every failure at once
+ccf.search("geniculate")
+
+# Annotation values belong to a release, so they have their own lookup
+ccf.by_value(170)  # LGd; in 2026, LGd is 1635
+ccf.get("MBA:170")  # identifiers are stable across releases
 
 # Subtrees
-ccf.children("LGd")                                # LGd-sh, LGd-co, LGd-ip
-ccf.ancestors("LGd")                               # root, grey, BS, IB, TH, ...
-ccf.annotation_values("LGd")                       # {170, 496345664, 496345668, 496345672}
-ccf.values_present("LGd", np.unique(annotation))   # the subtree's values that a volume uses
+ccf.children("LGd")  # LGd-sh, LGd-co, LGd-ip
+ccf.ancestors("LGd")  # root, grey, BS, IB, TH, DORsm, GENd
+ccf.ancestor_at("LGd-co", 4)  # TH
+ccf.partition("TH", 6)  # tiles the thalamus at depth 6
+ccf.annotation_values("LGd")  # {170, 496345664, 496345668, 496345672}
+ccf.values_present("LGd", np.unique(annotation))
+ccf.in_order(["CB", "LGd", "CA1"])  # anatomical order
 
-# Lateralized annotations (negative = left)
-ccf.lateral(-496345668)                            # (Term(... 'LGd-co' ...), 'left')
-slicer_color_table(ccf, {i: v for i, v in enumerate(values)}, "ccf.ctbl", lateralized=True)
+# Tables: plain dicts, which pandas, polars and pyarrow all read
+pd.DataFrame(ccf.to_records())  # brainglobe's lookup_df columns, plus depth
+
+# Hemispheres are a convention of some annotation volumes, not of the terminology:
+# iblatlas and the compacted lateralized CCF negate left-hemisphere values
+lateral.term_and_side(ccf, -496345668)  # (Term(... 'LGd-co' ...), 'left')
+lateral.values_present(ccf, "LGd", np.unique(annotation), "left")
+slicer_color_table(ccf, compact_values, "ccf.ctbl", lateralized=True)
 ```
 
-An annotation value belongs to its release: 2017 labels LGd 170, 2020 labels it 165, and 2026 labels
-it 1635. Identifiers (`MBA:170`) are stable across releases.
-
-Releases since 2020 have several roots (`brain`, `unassigned`, and in 2026-03 the midline). Only
-the 2017 release publishes Allen's sibling order (`graph_order`); for the others, siblings keep the
-order of the table.
+Where a structure is named, an int is refused, since it could mean an identifier or a
+release's annotation value; brainglobe treats them as one number, which holds in 2017 and
+nowhere since. Releases since 2020 have several roots, and only 2017 publishes Allen's
+sibling order (`has_sibling_order`); elsewhere siblings keep the table's order.
 
 The bundled terminology data are © Allen Institute, CC-BY-4.0.
 
