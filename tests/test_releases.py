@@ -1,21 +1,56 @@
-"""Tests for loading releases and the bundled data."""
+"""Tests for loading releases and the vendored data."""
 
-import io
+import hashlib
 import json
-import urllib.error
-import urllib.request
+from importlib import resources
 
 import pytest
 
-from aind_atlas_terminology import from_directory, load
+from aind_atlas_terminology import BUNDLED, from_directory, load
+
+DATA = resources.files("aind_atlas_terminology") / "data"
 
 
 def write_release(path, rows, name="toy", version="1"):
     path.mkdir(parents=True, exist_ok=True)
-    (path / "manifest.json").write_text(json.dumps({"name": name, "version": version}))
+    (path / "manifest.json").write_text(json.dumps({"name": name, "version": version}), encoding="utf-8")
     header = "identifier,annotation_value,parent_identifier,name,abbreviation,color_hex_triplet\n"
-    (path / "terminology.csv").write_text(header + "".join(",".join(r) + "\n" for r in rows))
+    (path / "terminology.csv").write_text(header + "".join(",".join(r) + "\n" for r in rows), encoding="utf-8")
     return path
+
+
+def vendored_files():
+    sources = json.loads((DATA / "sources.json").read_text("utf-8"))
+    return [
+        (name, version, rel, pin["sha256"])
+        for name, versions in sources.items()
+        for version, files in versions.items()
+        for rel, pin in files.items()
+    ]
+
+
+@pytest.mark.parametrize(("name", "version", "rel", "sha256"), vendored_files())
+def test_vendored_files_match_their_pins(name, version, rel, sha256):
+    assert hashlib.sha256((DATA / name / version / rel).read_bytes()).hexdigest() == sha256
+
+
+@pytest.mark.parametrize(("name", "version"), [(n, v) for n, vs in BUNDLED.items() for v in vs])
+def test_every_vendored_release_loads(name, version):
+    terms = load(version, name)
+    assert (terms.name, terms.version) == (name, version)
+    assert terms.term("LGd").identifier == "MBA:170"
+    assert len(terms.aliases) == 9
+
+
+def test_release_differences():
+    assert load("2017").has_sibling_order and not load("2026").has_sibling_order
+    assert [t.abbreviation for t in load("2026").roots] == ["brain", "unassigned"]
+    assert [load(v).term("LGd").annotation_value for v in ("2017", "2020", "2026")] == [170, 165, 1635]
+
+
+def test_unvendored_release_points_to_from_directory():
+    with pytest.raises(LookupError, match="from_directory"):
+        load("1999")
 
 
 def test_from_directory_parses_rows(tmp_path):
@@ -38,41 +73,3 @@ def test_allen_aliases_only_where_the_release_has_the_target(tmp_path):
     terms = from_directory(write_release(tmp_path, rows, name="allen-adult-mouse-terminology"))
     assert terms.aliases == {"Mmme": "MMme"}
     assert not terms.has_sibling_order
-
-
-def test_bundled_has_sibling_order_and_every_alias():
-    terms = load()
-    assert terms.has_sibling_order
-    assert len(terms.aliases) == 9
-
-
-def fake_bucket(monkeypatch, root, missing=()):
-    """Serve files under ``root`` as the bucket; record requests."""
-    requested = []
-
-    def urlopen(url, timeout):
-        requested.append(url)
-        rel = url.split("/terminologies/", 1)[1]
-        if rel.endswith(missing) or not (root / rel).exists():
-            raise urllib.error.HTTPError(url, 404, "Not Found", None, None)  # type: ignore[arg-type]
-        return io.BytesIO((root / rel).read_bytes())
-
-    monkeypatch.setattr(urllib.request, "urlopen", urlopen)
-    return requested
-
-
-def test_load_downloads_once_and_remembers_missing_legacy_file(tmp_path, monkeypatch):
-    name = "allen-adult-mouse-terminology"
-    write_release(tmp_path / "bucket" / name / "2020", [("MBA:997", "997", "", "root", "root", "")], name=name)
-    requested = fake_bucket(monkeypatch, tmp_path / "bucket")
-    for _ in range(2):
-        terms = load("2020", cache_dir=tmp_path / "cache", remote="https://bucket")
-        assert terms.version == "1" and not terms.has_sibling_order
-    assert len(requested) == 3
-
-
-def test_load_unknown_release_names_known_ones(tmp_path, monkeypatch):
-    fake_bucket(monkeypatch, tmp_path)
-    with pytest.raises(LookupError, match="known releases: 2017, 2020"):
-        load("1999", cache_dir=tmp_path / "cache")
-    assert not list((tmp_path / "cache").rglob("*.part"))

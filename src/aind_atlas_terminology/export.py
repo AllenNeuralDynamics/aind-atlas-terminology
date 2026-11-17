@@ -52,5 +52,5 @@ def slicer_color_table(
         lines.append(f"{label} {name.replace(' ', '_')} {r} {g} {b} 255")
     text = "\n".join(lines) + "\n"
     if path is not None:
-        Path(path).write_text(text)
+        Path(path).write_text(text, encoding="utf-8")
     return text

@@ -1,0 +1,49 @@
+{
+   "object_type": "Data description",
+   "describedBy": "https://raw.githubusercontent.com/AllenNeuralDynamics/aind-data-schema/main/src/aind_data_schema/core/data_description.py",
+   "schema_version": "2.3.0",
+   "license": "CC-BY-4.0",
+   "subject_id": "adult-mouse-population-average",
+   "creation_time": "2020-04-17T00:00:00Z",
+   "tags": null,
+   "name": "allen-adult-mouse-terminology-2026_2020-04-17_00-00-00",
+   "institution": {
+      "name": "Allen Institute for Brain Science",
+      "abbreviation": "AIBS",
+      "registry": "Research Organization Registry (ROR)",
+      "registry_identifier": "00dcv1019"
+   },
+   "funding_source": [
+      {
+         "object_type": "Funding",
+         "funder": {
+            "name": "Allen Institute",
+            "abbreviation": "AI",
+            "registry": "Research Organization Registry (ROR)",
+            "registry_identifier": "03cpe7c52"
+         },
+         "grant_number": null,
+         "fundee": null
+      }
+   ],
+   "data_level": "derived",
+   "group": null,
+   "investigators": [
+      {
+         "object_type": "Person",
+         "name": "Quanxin Wang",
+         "registry": "Open Researcher and Contributor ID (ORCID)",
+         "registry_identifier": "0000-0002-0007-7935"
+      }
+   ],
+   "project_name": "Allen Mouse Brain Common Coordinate Framework",
+   "restrictions": null,
+   "modalities": [
+      {
+         "name": "Serial two-photon tomogrophy",
+         "abbreviation": "STPT"
+      }
+   ],
+   "source_data": null,
+   "data_summary": "The 2026 revision of the Allen Mouse Reference Atlas, Ontology matches the 2020 release, with two additional rows for hemispheric labels (Left hemisphere and Right hemisphere)."
+}

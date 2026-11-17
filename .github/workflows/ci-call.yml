@@ -41,3 +41,24 @@ jobs:
       # internal or private git dependencies pinned in [tool.uv.sources]
       # can be cloned. Harmless to leave in when all deps are public.
       repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+  # The shared workflow's steps assume bash, so other platforms run the tests directly.
+  test-other-platforms:
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+        python-version: ["3.11", "3.13"]
+    name: Test (Py ${{ matrix.python-version }} on ${{ matrix.os }})
+    if: >
+      (github.event_name != 'pull_request' || github.event.pull_request.draft == false) &&
+      github.actor != 'github-actions[bot]' &&
+      !(github.event_name == 'push' && startsWith(github.event.head_commit.message, 'bump:'))
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run --frozen pytest

@@ -1,16 +1,14 @@
-"""Load terminology releases: bundled, cached from the public bucket, or from a directory.
+"""Load terminology releases: vendored in the package, or from a directory.
 
 A release directory holds ``manifest.json`` (its name and version) and ``terminology.csv``, laid out as the
-atlas-assets specification describes.
+atlas-assets specification describes. The vendored releases are pinned by checksum in ``data/sources.json``, since
+Allen rewrites published files in place; ``scripts/update_terminologies.py`` refreshes them.
 """
 
 from __future__ import annotations
 
 import csv
 import json
-import shutil
-import urllib.error
-import urllib.request
 from importlib import resources
 from pathlib import Path
 
@@ -19,14 +17,12 @@ from aind_atlas_terminology.terminology import Terminology
 
 ALLEN_MOUSE = "allen-adult-mouse-terminology"
 
-DEFAULT_REMOTE = "https://allen-atlas-assets.s3.amazonaws.com"
-"""Public bucket holding Allen's atlas assets."""
+_DATA = resources.files("aind_atlas_terminology") / "data"
 
-BUNDLED = ((ALLEN_MOUSE, "2017"),)
-"""Releases shipped with the package, as ``(name, version)``."""
-
-KNOWN_RELEASES = {ALLEN_MOUSE: ("2017", "2020", "2026-03", "2026")}
-"""Releases :func:`load` can fetch, checked against the bucket; it tries any other version it is asked for."""
+BUNDLED: dict[str, tuple[str, ...]] = {
+    name: tuple(versions) for name, versions in json.loads((_DATA / "sources.json").read_text("utf-8")).items()
+}
+"""Vendored releases: terminology name -> versions."""
 
 # The IBL / structure_tree_safe_2017 copy of the Allen ontology spells these differently from Allen.
 ALLEN_MOUSE_ALIASES = {
@@ -44,24 +40,16 @@ ALLEN_MOUSE_ALIASES = {
 _LEGACY_STRUCTURES = "legacy_files/adult_mouse_ccf_structures.csv"
 
 
-def load(
-    version: str = "2017",
-    name: str = ALLEN_MOUSE,
-    *,
-    cache_dir: str | Path | None = None,
-    remote: str = DEFAULT_REMOTE,
-) -> Terminology:
-    """Load a release: from the package if bundled, otherwise downloaded once into ``cache_dir``.
-
-    The default cache is ``~/.cache/aind-atlas-terminology``.
-    """
-    if (name, version) in BUNDLED:
-        with resources.as_file(resources.files("aind_atlas_terminology") / "data" / name / version) as path:
-            return from_directory(path)
-    cache = Path(cache_dir) if cache_dir else Path.home() / ".cache" / "aind-atlas-terminology"
-    local = cache / name / version
-    _download(f"{remote.rstrip('/')}/terminologies/{name}/{version}", local, name, version)
-    return from_directory(local)
+def load(version: str = "2017", name: str = ALLEN_MOUSE) -> Terminology:
+    """Load a vendored release; see :data:`BUNDLED`. Other releases load with :func:`from_directory`."""
+    if version not in BUNDLED.get(name, ()):
+        vendored = "; ".join(f"{n} {', '.join(v)}" for n, v in BUNDLED.items())
+        raise LookupError(
+            f"{name} {version} is not vendored (vendored: {vendored}); "
+            "download it and use from_directory, or add it with scripts/update_terminologies.py"
+        )
+    with resources.as_file(_DATA / name / version) as path:
+        return from_directory(path)
 
 
 def from_directory(path: str | Path) -> Terminology:
@@ -71,7 +59,7 @@ def from_directory(path: str | Path) -> Terminology:
     present (2017 only), Allen's sibling order.
     """
     path = Path(path)
-    manifest = json.loads((path / "manifest.json").read_text())
+    manifest = json.loads((path / "manifest.json").read_text(encoding="utf-8"))
     name, version = manifest["name"], str(manifest["version"])
     with open(path / "terminology.csv", newline="", encoding="utf-8") as fh:
         terms = [_term(row) for row in csv.DictReader(fh)]
@@ -85,35 +73,6 @@ def from_directory(path: str | Path) -> Terminology:
             with open(legacy, newline="", encoding="utf-8") as fh:
                 order = {f"MBA:{r['id']}": int(r["graph_order"]) for r in csv.DictReader(fh)}
     return Terminology(terms, name=name, version=version, aliases=aliases, order=order)
-
-
-def _download(base_url: str, local: Path, name: str, version: str) -> None:
-    """Fetch a release's files that are not yet cached; a missing optional file is remembered, not retried."""
-    files = ["manifest.json", "terminology.csv"] + ([_LEGACY_STRUCTURES] if name == ALLEN_MOUSE else [])
-    for rel in files:
-        target = local / rel
-        absent = target.with_suffix(".absent")
-        if target.exists() or absent.exists():
-            continue
-        target.parent.mkdir(parents=True, exist_ok=True)
-        partial = target.with_suffix(target.suffix + ".part")
-        try:
-            with urllib.request.urlopen(f"{base_url}/{rel}", timeout=60) as resp, open(partial, "wb") as out:
-                shutil.copyfileobj(resp, out)
-        except urllib.error.HTTPError as err:
-            partial.unlink(missing_ok=True)
-            if err.code == 404 and rel == _LEGACY_STRUCTURES:
-                absent.touch()
-                continue
-            if err.code in (403, 404):  # S3 answers 403 for a missing key in a bucket that refuses listing
-                known = KNOWN_RELEASES.get(name)
-                hint = f"; known releases: {', '.join(known)}" if known else ""
-                raise LookupError(f"no release {name} {version} at {base_url}{hint}") from err
-            raise
-        except OSError:
-            partial.unlink(missing_ok=True)
-            raise
-        partial.replace(target)
 
 
 def _term(row: dict[str, str]) -> Term:

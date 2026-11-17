@@ -1,0 +1,2 @@
+# Vendored releases are pinned by sha256; a line-ending conversion on checkout would break them.
+src/aind_atlas_terminology/data/** -text

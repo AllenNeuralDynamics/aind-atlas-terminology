@@ -4,7 +4,7 @@ from importlib.metadata import PackageNotFoundError, version
 
 from aind_atlas_terminology import lateral
 from aind_atlas_terminology.export import slicer_color_table
-from aind_atlas_terminology.releases import BUNDLED, DEFAULT_REMOTE, KNOWN_RELEASES, from_directory, load
+from aind_atlas_terminology.releases import BUNDLED, from_directory, load
 from aind_atlas_terminology.term import (
     AmbiguousStructureError,
     Hemisphere,
@@ -22,8 +22,6 @@ except PackageNotFoundError:
 
 __all__ = [
     "BUNDLED",
-    "DEFAULT_REMOTE",
-    "KNOWN_RELEASES",
     "AmbiguousStructureError",
     "Hemisphere",
     "Match",

@@ -21,15 +21,16 @@ pip install .
 
 A terminology is the tree of structures an atlas's annotation volumes label, in the
 [atlas-assets](https://atlas-assets.readthedocs.io) format Allen publishes to the public
-`allen-atlas-assets` bucket. The package has no dependencies. The 2017 Allen adult mouse
-terminology, which labels the CCFv3 2017 annotation, ships with it; other releases
-(`KNOWN_RELEASES`) download once into `~/.cache`.
+`allen-atlas-assets` bucket. The package has no dependencies and never touches the network: the
+Allen adult mouse releases 2017 (which labels the CCFv3 2017 annotation), 2020, 2026-03 and 2026
+ship with it (`BUNDLED`), pinned by checksum. Any other release loads with
+`from_directory(path)`.
 
 ```python
 from aind_atlas_terminology import load, lateral, slicer_color_table
 
-ccf = load()  # allen-adult-mouse-terminology 2017, bundled
-ccf26 = load("2026")  # fetched and cached
+ccf = load()  # allen-adult-mouse-terminology 2017
+ccf26 = load("2026")
 
 # A structure is named by abbreviation, full name or identifier
 ccf.term("LGd")  # Term(identifier='MBA:170', ...)
@@ -67,6 +68,12 @@ Where a structure is named, an int is refused, since it could mean an identifier
 release's annotation value; brainglobe treats them as one number, which holds in 2017 and
 nowhere since. Releases since 2020 have several roots, and only 2017 publishes Allen's
 sibling order (`has_sibling_order`); elsewhere siblings keep the table's order.
+
+Allen rewrites published files in place, so the vendored files are pinned in
+`src/aind_atlas_terminology/data/sources.json` with their sha256, ETag and modification time.
+`uv run python scripts/update_terminologies.py` re-downloads them and lists what changed;
+`... update_terminologies.py allen-adult-mouse-terminology <version>` adds a release. A change to
+the data is a commit and a release of this package.
 
 The bundled terminology data are © Allen Institute, CC-BY-4.0.
 

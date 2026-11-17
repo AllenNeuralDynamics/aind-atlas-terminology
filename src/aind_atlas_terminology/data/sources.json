@@ -1,0 +1,77 @@
+{
+  "allen-adult-mouse-terminology": {
+    "2017": {
+      "manifest.json": {
+        "sha256": "ce110dbb23d5c49cfda14a00136130056ac01d6b57ce4541be65f550551851c1",
+        "etag": "e214dbae9887e60bfd687dfb02c8597d",
+        "last_modified": "Wed, 16 Sep 2026 01:39:59 GMT"
+      },
+      "terminology.csv": {
+        "sha256": "fc77628bf671db539684791017d8e86f5133dc89d6a394c612c4c08ef0e82cd6",
+        "etag": "416cda9c3762d966faad77038124b935",
+        "last_modified": "Wed, 16 Sep 2026 01:39:59 GMT"
+      },
+      "data_description.json": {
+        "sha256": "d6e315fc488bb5012562491ef47b76bc1fc895caa7a299d9443e3870eef9a2ea",
+        "etag": "502d894f16bbff9a39cd8056104a2147",
+        "last_modified": "Wed, 16 Sep 2026 01:39:59 GMT"
+      },
+      "legacy_files/adult_mouse_ccf_structures.csv": {
+        "sha256": "4a927616cdfd14c0fb5617bf70e639e0758d3b13781a457fbb162d65ebd28cdd",
+        "etag": "0595ecccd4ecfe7114c6461d297bbd71",
+        "last_modified": "Wed, 16 Sep 2026 01:39:59 GMT"
+      }
+    },
+    "2020": {
+      "manifest.json": {
+        "sha256": "5a361944cff9a2ce0d61a8613b2a56c6143bd5117dc897d1e0b8126961357523",
+        "etag": "d4f0e52ea88b8cd02cdc054545d8ece3",
+        "last_modified": "Wed, 16 Sep 2026 01:39:59 GMT"
+      },
+      "terminology.csv": {
+        "sha256": "e7375ba13e40b98aab09a7c63fcab3817801b89809386660bb3ff1f2241d75d2",
+        "etag": "c12ce730554ce147fc16b9ba60b5ee1d",
+        "last_modified": "Wed, 16 Sep 2026 01:39:59 GMT"
+      },
+      "data_description.json": {
+        "sha256": "103a79f89c197a9a4eae5fcf2b41186e33f9c22443e6f6a3bd2a597fd29854d2",
+        "etag": "e439eb00f157c62ab1050e678335af13",
+        "last_modified": "Wed, 16 Sep 2026 01:39:59 GMT"
+      }
+    },
+    "2026-03": {
+      "manifest.json": {
+        "sha256": "f64ed2d6ff82e3a487c4ae98994eff30647f41a13bbc6f9b736032977e132068",
+        "etag": "ad22ff8f9d2a00281fea724a0165553e",
+        "last_modified": "Wed, 16 Sep 2026 01:40:00 GMT"
+      },
+      "terminology.csv": {
+        "sha256": "33654acfcd12f579e62eca0af7fcc97f736a84d11b65d88af88156f823152536",
+        "etag": "e8c6b7998d46b1e4fdd8352108eea743",
+        "last_modified": "Wed, 16 Sep 2026 01:40:00 GMT"
+      },
+      "data_description.json": {
+        "sha256": "4f57433a9eaf0840b0951718e37472f05d9ae9e703a36dcb67f9d9b6b1deeb5b",
+        "etag": "28fa04f4efa7933b277b26d21830849f",
+        "last_modified": "Wed, 16 Sep 2026 01:40:00 GMT"
+      }
+    },
+    "2026": {
+      "manifest.json": {
+        "sha256": "13dc460fece8a99d3776a27250edec0b97a9a106435f8c24d8a3d1f8b1a45a46",
+        "etag": "d41943a9828947389e55b4f4874ea8c0",
+        "last_modified": "Fri, 10 Apr 2026 00:45:15 GMT"
+      },
+      "terminology.csv": {
+        "sha256": "923c128f4e215eabd607ded6f82eb6beb6b831751dab51088208c8370fac4b83",
+        "etag": "9d5e7a7f7aa5ad05413d0ae58703ceb3",
+        "last_modified": "Fri, 10 Apr 2026 00:45:15 GMT"
+      },
+      "data_description.json": {
+        "sha256": "e945962dbfb3a3f0baf4ed7dd378abda3e3a13864477b12f878df30d873f377c",
+        "etag": "9b370fcbb7a6d4c501c7058725efd7e9",
+        "last_modified": "Fri, 10 Apr 2026 00:45:15 GMT"
+      }
+    }
+  }
+}
