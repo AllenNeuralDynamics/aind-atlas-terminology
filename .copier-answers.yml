@@ -18,7 +18,7 @@ license: MIT
 project_description: Resolve and select brain structures in Allen atlas-assets terminologies
 project_name: AIND atlas terminology
 project_slug: aind-atlas-terminology
-publish_to_pypi: false
+publish_to_pypi: true
 python_package_import_name: aind_atlas_terminology
 python_version: '3.11'
 target_python_version: '3.13'
